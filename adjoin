@@ -4,7 +4,7 @@
 
 VERFILE=/etc/debian_version
 DEPENDENCIES="sudo samba krb5-user winbind libnss-winbind libpam-winbind ntp bash-completion"
-PAKAGES="" # list of not installed packages
+PACKAGES="" # list of not installed packages
 
 # Configs backup directory
 BACKUPDIR=~/.ADCONNECT/
@@ -48,8 +48,7 @@ case $VERSION in
 	;;
 esac
 
-echo ""
-echo "Check packages installation:"
+echo -e "\nCheck packages installation:"
 
 # Check installed packages
 for i in $DEPENDENCIES
@@ -59,15 +58,15 @@ do
 		echo -e "[ \033[32mOK\033[m ] \033[33m$i\033[m is installed"
 	else
 		echo -e "[\033[31mWARN\033[m] \033[33m$i\033[m is not installed"
-		PAKAGES="$PAKAGES $i"
+		PACKAGES="$PACKAGES $i"
 	fi
 done
 
-#PAKAGES=" "
+#PACKAGES=" "
 
-if [[ $PAKAGES != "" ]]; then
+if [[ $PACKAGES != "" ]]; then
 	echo ""
-	echo -e "Packages for instalation: \033[33m$PAKAGES\033[m"
+	echo -e "Packages for instalation: \033[33m$PACKAGES\033[m"
 
 	TRY=0
 	while true ; do
@@ -75,7 +74,7 @@ if [[ $PAKAGES != "" ]]; then
 		case $REPLY  in
 			[Yy]|[Yy][Ee]|[Yy][Ee][Ss] )
 				apt-get update
-				DEBIAN_FRONTEND=noninteractive apt-get -y install $PAKAGES
+				DEBIAN_FRONTEND=noninteractive apt-get -y install $PACKAGES
 				break
 			;;
 			[Nn]|[Nn][Oo] )
@@ -89,8 +88,7 @@ if [[ $PAKAGES != "" ]]; then
 	done
 fi
 
-echo ""
-echo "Check config files:"
+echo -e "\nCheck config files:"
 
 for i in $CONFIGS
 do
@@ -300,7 +298,7 @@ ENDSTR=$(grep -n '#======================= Share Definitions ===================
 
 if [[ $STARTSTR != "" ]] && [[ $ENDSTR != "" ]]; then
 	sed -i '/#======================= Global Settings =======================/,/#======================= Share Definitions =======================/d' $SMBCNF
-	ABRACADABRA="#======================= Global Settings =======================\n\n[global]\n\tsecurity = ads\n\tname resolve order = wins bcast\n\trealm = ${DOMAIN}\n\tpassword server = ${SERVER}\n\tworkgroup = ${WORKGROUP}\n\n\twinbind refresh tickets = yes\n\twinbind enum users = yes\n\twinbind enum groups = yes\n\twinbind use default domain = yes\n\twinbind nss info = template\n\twinbind cache time = 60\n\n\tidmap config * : backend = tdb\n\tidmap config * : range = 2000-9999\n\n\tidmap config ${WORKGROUP}:backend = rid\n\tidmap config ${WORKGROUP}:range = 10000-99999\n\n\ttemplate homedir = /home/%U\n\ttemplate shell = /bin/bash\n\n\tclient use spnego = yes\n\tclient ntlmv2 auth = yes\n\tclient ldap sasl wrapping = seal\n\n\tencrypt passwords = yes\n\n\trestrict anonymous = 2\n\n\tdomain master = no\n\tlocal master = no\n\tpreferred master = no\n\tos level = 0\n\n\tload printers = no\n\tprinting = bsd\n\tprintcap name = /dev/null\n\n#======================= Share Definitions ======================="
+	ABRACADABRA="#======================= Global Settings =======================\n\n[global]\n\tsecurity = ads\n\tname resolve order = wins bcast host\n\trealm = ${DOMAIN}\n\tpassword server = ${SERVER}\n\tworkgroup = ${WORKGROUP}\n\n\twinbind refresh tickets = yes\n\twinbind enum users = yes\n\twinbind enum groups = yes\n\twinbind use default domain = yes\n\twinbind nss info = template\n\twinbind cache time = 10800\n\twinbind offline logon = true\n\n\tidmap config * : backend = tdb\n\tidmap config * : range = 2000-9999\n\n\tidmap config ${WORKGROUP}:backend = rid\n\tidmap config ${WORKGROUP}:range = 10000-99999\n\n\ttemplate homedir = /home/%U\n\ttemplate shell = /bin/bash\n\n\tclient use spnego = yes\n\tclient ntlmv2 auth = yes\n\tclient ldap sasl wrapping = seal\n\n\tencrypt passwords = yes\n\n\trestrict anonymous = 2\n\n\tdomain master = no\n\tlocal master = no\n\tpreferred master = no\n\tos level = 0\n\n\tload printers = no\n\tprinting = bsd\n\tprintcap name = /dev/null\n\n#======================= Share Definitions ======================="
 	sed -i "${STARTSTR}i${ABRACADABRA}" $SMBCNF
 else
 	echo Key string not found. Process was stopped on samba configuration.
@@ -344,7 +342,7 @@ read -erp "Please enter your domain administrator login: "
 		net ads join -U ${REPLY}@${DOMAIN} osname="${OSNAME}" osver="${OSVER}"
 		break
 	else
-		echo Wrang username
+		echo Wrong username
 	fi
 done
 
@@ -367,9 +365,6 @@ case $VERSION in
 esac
 
 sleep 0.5
-
-#wbinfo -u
-#getent passwd
 
 # Configure pam and sudoers
 

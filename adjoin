@@ -414,13 +414,13 @@ if [ $(getent group | grep "domain users" -c) -gt 0 ]; then
 		case $(wbinfo -n "${REPLY}") in
 		*SID_USER* )
 			USER=${REPLY,,}
-			SUDO="# \"$USER\" user from AD\n$(echo $USER | sed 's/\s/\\ /') ALL=(ALL:ALL) ALL"
+			SUDO="# \"$USER\" user from AD\n$(echo $USER | sed 's/\s/\\ /g') ALL=(ALL:ALL) ALL"
 			echo -e $SUDO > /etc/sudoers.d/AD
 			break
 		;;
 		*SID_DOM_GROUP* )
 			GROUP=${REPLY,,}
-			SUDO="# \"$GROUP\" group from AD\n%$(echo $GROUP | sed 's/\s/\\ /') ALL=(ALL:ALL) ALL"
+			SUDO="# \"$GROUP\" group from AD\n%$(echo $GROUP | sed 's/\s/\\ /g') ALL=(ALL:ALL) ALL"
 			echo -e $SUDO > /etc/sudoers.d/AD
 			break
 		;;

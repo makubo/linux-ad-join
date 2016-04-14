@@ -3,7 +3,7 @@ Bash script for interactive joining linux to Active Directory
 
 **Supported linux:**
 
-Debian (Wheezy and Debian tested)
+Debian (Wheezy and Jessie tested)
 
 **Testet on:**
 

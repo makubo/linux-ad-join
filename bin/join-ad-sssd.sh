@@ -605,12 +605,6 @@ configure_pam()
 	
 	echo "Configure PAM."
 	
-	grep 'mkhomedir' /etc/pam.d/common-session >/dev/null 2>&1
-	if [ $? -eq 0 ] ; then
-		echo "PAM already configured."
-		return 0
-	fi
-	
 	cp $PAM_SESSIONS_CONFIG_FILE $PAM_SESSIONS_CONFIG_BACKUP
 	if [ $? -ne 0 ] ; then
 		echo "Can not copy file '$PAM_SESSIONS_CONFIG_FILE' to '$PAM_SESSIONS_CONFIG_BACKUP'."

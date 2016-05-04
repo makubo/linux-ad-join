@@ -125,6 +125,12 @@ setup_domain()
 	return 0
 }
 
+install_dnsutils()
+{
+	test_app dig nslookup nsupdate || install_app "BIND DNS utils" dnsutils
+	return $?
+}
+
 check_dns_settings()
 {
 	local DNS_LDAP_SRV="_ldap._tcp.$DOMAIN"
@@ -138,6 +144,8 @@ check_dns_settings()
 	echo "Resolved successful."
 	
 	echo "Try to resolve LDAP SRV record '$DNS_LDAP_SRV'."
+	
+	
 	local DIG=$(dig -t SRV "$DNS_LDAP_SRV")
 	echo "$DIG" | grep -i 'answer section' >/dev/null 2>&1
 	if [ $? -ne 0 ] ; then
@@ -752,6 +760,7 @@ main ()
 	check_root \
 	&& prepare_backup_dir \
 	&& setup_domain \
+	&& install_dnsutils \
 	&& check_dns_settings \
 	&& install_ntp \
 	&& configure_ntp \

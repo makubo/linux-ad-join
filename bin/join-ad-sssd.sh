@@ -435,7 +435,7 @@ write_sssd_config()
 	echo [sssd]
 	echo domains = $DOMAIN_LOWER
 	echo config_file_version = 2
-	echo services = nss, pam
+	echo services = nss, pam, sudo
 	
 	if [ ! -z "$SSSD_DEBUG" ] && [ $SSSD_DEBUG -ne 0 ] ; then
 		echo debug_level = 7
@@ -488,6 +488,7 @@ write_sssd_config()
 	if [ ! -z "$SSSD_DEBUG" ] && [ $SSSD_DEBUG -ne 0 ] ; then
 		echo debug_level = 7
 	fi
+	echo sudo_provider = none
 	echo access_provider = ad
 	
 	return 0
@@ -533,6 +534,8 @@ configure_sssd()
 		return 1
 	fi
 	
+	rm -f $SSSD_DB_PATH/* >/dev/null 2>&1
+	rm -f $SSSD_CACHE_PATH/* >/dev/null 2>&1
 	rm -f $SSSD_LOG_PATH/* >/dev/null 2>&1
 	
 	if [ $SSSD_USE_FQDN -eq 0 ] ; then

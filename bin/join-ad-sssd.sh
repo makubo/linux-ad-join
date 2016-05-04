@@ -533,10 +533,7 @@ configure_sssd()
 		return 1
 	fi
 	
-	rm -f "$SSSD_DB_PATH/*" >/dev/null 2>&1
-	rm -f "$SSSD_CACHE_PATH/*" >/dev/null 2>&1
-	rm -f "$SSSD_LOG_PATH/*" >/dev/null 2>&1
-
+	rm -f $SSSD_LOG_PATH/* >/dev/null 2>&1
 	
 	if [ $SSSD_USE_FQDN -eq 0 ] ; then
 		USER=$ADMIN
@@ -557,6 +554,8 @@ configure_sssd()
 			echo "Try again. Attempt $TRY from $SSSD_TRY_COUNT."
 			stop_service $SSSD_SERVICE_NAME || return 1
 			sleep 1
+			rm -f $SSSD_DB_PATH/* >/dev/null 2>&1
+			rm -f $SSSD_CACHE_PATH/* >/dev/null 2>&1
 			start_service $SSSD_SERVICE_NAME || return 1
 		fi
 		

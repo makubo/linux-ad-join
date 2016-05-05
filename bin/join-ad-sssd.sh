@@ -781,7 +781,6 @@ check_login()
 		return 1
 	fi
 	
-	echo "Now you can try login as '$USER' by SSH."
 	return 0
 }
 

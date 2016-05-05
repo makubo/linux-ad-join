@@ -510,20 +510,39 @@ write_sssd_config()
 	return 0
 }
 
+clear_sssd_cache()
+{
+	local SSSD_DB_PATH=/var/lib/sss/db
+	local SSSD_CACHE_PATH=/var/lib/sss/mc
+	local SSSD_SERVICE_NAME=sssd
+	local SSSD_SLEEP_AFTER_START=10
+	
+	echo "Clear SSSD cache."
+	
+	stop_service sssd || return 1
+	sleep 1
+	
+	rm -vf $SSSD_DB_PATH/*
+	rm -vf $SSSD_CACHE_PATH/*
+	
+	start_service sssd || return 1
+	
+	if [ $SSSD_SLEEP_AFTER_START -gt 0 ] ; then
+		echo "Wait about $SSSD_SLEEP_AFTER_START seconds until the SSSD is initialized."
+		sleep $SSSD_SLEEP_AFTER_START
+	fi
+	
+	echo "SSSD cache cleared successful."
+	return 0
+}
+
 configure_sssd()
 {
 	local SSSD_CONFIG_FILE=/etc/sssd/sssd.conf
 	local SSSD_CONFIG_BACKUP=$BACKUP_PATH/sssd.conf
-	local SSSD_DB_PATH=/var/lib/sss/db
-	local SSSD_CACHE_PATH=/var/lib/sss/mc
-	local SSSD_LOG_PATH=/var/log/sssd
-	local SSSD_SERVICE_NAME=sssd
-	local SSSD_SLEEP_AFTER_START=15
 	local SSSD_TRY_COUNT=5
 
 	echo "Configure SSSD."
-	
-	stop_service $SSSD_SERVICE_NAME || return 1
 	
 	if [ -f $SSSD_CONFIG_FILE ] ; then
 		mv $SSSD_CONFIG_FILE $SSSD_CONFIG_BACKUP
@@ -550,56 +569,41 @@ configure_sssd()
 		return 1
 	fi
 	
-	rm -f $SSSD_DB_PATH/* >/dev/null 2>&1
-	rm -f $SSSD_CACHE_PATH/* >/dev/null 2>&1
-	rm -f $SSSD_LOG_PATH/* >/dev/null 2>&1
-	
 	echo "Check that SSSD is configured properly."
 	
-	local TRY=1
+	local TRY=0
 	local CHECK=1
 	
 	while [ $TRY -le $SSSD_TRY_COUNT ] && [ $CHECK -ne 0 ] ; do
 	
-		if [ $TRY -eq 1 ] ; then
-			start_service $SSSD_SERVICE_NAME || return 1
-		else
+		TRY=$((TRY + 1))
+	
+		clear_sssd_cache || return 1
+	
+		if [ $TRY -gt 1 ] ; then
 			echo "Try again. Attempt $TRY from $SSSD_TRY_COUNT."
-			stop_service $SSSD_SERVICE_NAME || return 1
-			sleep 1
-			rm -f $SSSD_DB_PATH/* >/dev/null 2>&1
-			rm -f $SSSD_CACHE_PATH/* >/dev/null 2>&1
-			start_service $SSSD_SERVICE_NAME || return 1
-		fi
-		
-		if [ $SSSD_SLEEP_AFTER_START -gt 0 ] ; then
-			echo "Wait for $SSSD_SLEEP_AFTER_START seconds."
-			sleep $SSSD_SLEEP_AFTER_START
 		fi
 		
 		echo "Check passwd for user '$USER'."
 		getent passwd $USER
 		CHECK=$?
-		
-		if [ $CHECK -eq 0 ] ; then
-			echo "Check group lists for user '$USER'."
-			id $USER
-			CHECK=$?
-		fi
-		
 		if [ $CHECK -ne 0 ] ; then
-			echo "Configuration check failed."
+			echo "Passwd check failed."
+			continue
 		fi
 		
-		TRY=$((TRY + 1))
-		
+		echo "Check groups for user '$USER'."
+		id $USER
+		CHECK=$?	
+		if [ $CHECK -ne 0 ] ; then
+			echo "Groups check failed."
+			continue
+		fi
 	done
 	
 	if [ $CHECK -ne 0 ] ; then
 		return 1
 	fi
-	
-	echo "Checked successful."
 	
 	echo "SSSD configured successful."
 	return 0
@@ -689,7 +693,7 @@ configure_login_permissions()
 		done <<< "$GROUPLIST"
 	fi
 	
-	service sssd restart
+	clear_sssd_cache
 	
 	echo "Login permissions configured successful."
 	return 0

@@ -446,22 +446,26 @@ write_sssd_config()
 	echo config_file_version = 2
 	echo services = nss, pam, sudo
 	
-	if [ ! -z "$SSSD_DEBUG" ] && [ $SSSD_DEBUG -ne 0 ] ; then
-		echo debug_level = 7
+	if [ -z "$SSSD_DEBUG" ] || [ $SSSD_DEBUG -eq 0 ] ; then
+		printf '# '
 	fi
+	echo debug_level = 7
 	
 	echo
 	echo [nss]
 	
-	if [ ! -z "$SSSD_DEBUG" ] && [ $SSSD_DEBUG -ne 0 ] ; then
-		echo debug_level = 7
+	if [ -z "$SSSD_DEBUG" ] || [ $SSSD_DEBUG -eq 0 ] ; then
+		printf '# '
 	fi
+	echo debug_level = 7
 	
 	echo
 	echo [pam]
-	if [ ! -z "$SSSD_DEBUG" ] && [ $SSSD_DEBUG -ne 0 ] ; then
-		echo debug_level = 7
+	
+	if [ -z "$SSSD_DEBUG" ] || [ $SSSD_DEBUG -eq 0 ] ; then
+		printf '# '
 	fi
+	echo debug_level = 7
 	
         echo 
 	echo [domain/$DOMAIN_LOWER]
@@ -494,10 +498,13 @@ write_sssd_config()
 		echo True
 	fi
 	echo fallback_homedir = /home/%d/%u
-	if [ ! -z "$SSSD_DEBUG" ] && [ $SSSD_DEBUG -ne 0 ] ; then
-		echo debug_level = 7
-	fi
 	echo sudo_provider = none
+	
+	if [ -z "$SSSD_DEBUG" ] || [ $SSSD_DEBUG -eq 0 ] ; then
+		printf '# '
+	fi
+	echo debug_level = 7
+	
 	echo access_provider = ad
 	
 	return 0

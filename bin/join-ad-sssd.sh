@@ -242,6 +242,8 @@ configure_ntp()
 	fi
 	
 	stop_service $NTP_SERVICE_NAME || return 1
+	sleep 1
+	
 	echo "Sync time."
 	ntpd -gq
 	if [ $? -ne 0 ] ; then
@@ -249,6 +251,7 @@ configure_ntp()
 		return 1
 	fi
 	echo "Time synchronized successful."
+	
 	start_service $NTP_SERVICE_NAME || return 1
 
 	echo "NTP client configured successful."
@@ -777,7 +780,7 @@ main ()
 	fi
 	
 	echo "All configuration changes by '$0' finished successful."
-	
+
 	return $?
 }
 

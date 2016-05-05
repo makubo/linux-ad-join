@@ -314,6 +314,12 @@ setup_admin()
                 read ADMIN
         done
 	
+	if [ ! -z "$SSSD_USE_FQDN" ] && [ $SSSD_USE_FQDN -eq 0 ] ; then
+		USER=$ADMIN
+	else
+		USER=$ADMIN@$DOMAIN
+	fi
+	
 	return 0
 }
 
@@ -541,18 +547,12 @@ configure_sssd()
 	rm -f $SSSD_CACHE_PATH/* >/dev/null 2>&1
 	rm -f $SSSD_LOG_PATH/* >/dev/null 2>&1
 	
-	if [ $SSSD_USE_FQDN -eq 0 ] ; then
-		USER=$ADMIN
-	else
-		USER=$ADMIN@$DOMAIN
-	fi
-	
-	echo "Check passwd for user '$USER'."
+	echo "Check that SSSD is configured properly."
 	
 	local TRY=1
-	local GETENT=1
+	local CHECK=1
 	
-	while [ $TRY -le $SSSD_TRY_COUNT ] && [ $GETENT -ne 0 ] ; do
+	while [ $TRY -le $SSSD_TRY_COUNT ] && [ $CHECK -ne 0 ] ; do
 	
 		if [ $TRY -eq 1 ] ; then
 			start_service $SSSD_SERVICE_NAME || return 1
@@ -570,17 +570,25 @@ configure_sssd()
 			sleep $SSSD_SLEEP_AFTER_START
 		fi
 		
-		getent passwd $USER && id $USER
-		GETENT=$?
-		if [ $GETENT -ne 0 ] ; then
-			echo "Passwd check failed."
+		echo "Check passwd for user '$USER'."
+		getent passwd $USER
+		CHECK=$?
+		
+		if [ $CHECK -eq 0 ] ; then
+			echo "Check group lists for user '$USER'."
+			id $USER
+			CHECK=$?
+		fi
+		
+		if [ $CHECK -ne 0 ] ; then
+			echo "Configuration check failed."
 		fi
 		
 		TRY=$((TRY + 1))
 		
 	done
 	
-	if [ $GETENT -ne 0 ] ; then
+	if [ $CHECK -ne 0 ] ; then
 		return 1
 	fi
 	
@@ -752,6 +760,20 @@ configure_sudo_permissions()
 	return 0
 }
 
+check_login()
+{
+	echo "Check login for user '$USER'"
+	
+	su -c 'echo Login successful as $(whoami). && exit' $USER
+	if [ $? -ne 0 ] ; then
+		echo "Can not login."
+		return 1
+	fi
+	
+	echo "Now you can try login as '$USER' by SSH."
+	return 0
+}
+
 main ()
 {
 	APTGET_UPDATE=0
@@ -773,7 +795,8 @@ main ()
 	&& configure_pam \
 	&& configure_login_permissions \
 	&& install_sudo \
-	&& configure_sudo_permissions
+	&& configure_sudo_permissions \
+	&& check_login
 
 	if [ $? -ne 0 ] ; then
 		return $?

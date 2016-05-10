@@ -435,8 +435,7 @@ search_domain_controller()
 
 write_sssd_config()
 {
-	local SSSD_LDAP_SEARCH_TIMEOUT=15
-	local SSSD_LDAP_NETWORK_TIMEOUT=3
+	local SSSD_KRB5_AUTH_TIMEOUT=15
 
 	local DOMAIN_LOWER=$(echo $DOMAIN | tr '[:upper:]' '[:lower:]')
 	local DOMAIN_UPPER=$(echo $DOMAIN | tr '[:lower:]' '[:upper:]')
@@ -488,6 +487,7 @@ write_sssd_config()
 	echo cache_credentials = True
 	echo id_provider = ad
 	echo krb5_store_password_if_offline = True
+	echo krb5_auth_timeout = $SSSD_KRB5_AUTH_TIMEOUT
 	echo default_shell = /bin/bash
 	echo ldap_id_mapping = True
 	

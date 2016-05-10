@@ -113,9 +113,9 @@ prepare_backup_dir()
 setup_domain()
 {
 	if [ -z "$DOMAIN" ] ; then
-		DOMAIN=$(hostname --domain)
+		DOMAIN=$(dnsdomainname)
 		if [ -z "$DOMAIN" ] ; then
-			echo "Can not determine a domain name. Check your resolv.conf settings."
+			echo "Can not determine a domain name. Check your '/etc/resolv.conf' and '/etc/hosts' settings."
 			return 1
 		fi
 	fi

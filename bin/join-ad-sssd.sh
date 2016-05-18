@@ -771,9 +771,36 @@ configure_sudo_permissions()
 	return 0
 }
 
+install_bash_completion()
+{
+	install_app "bash-completion" bash-completion
+	return $?
+}
+
+uncomment_bash_completion_in_interactive_shells()
+{
+	local FILE=$1
+	
+	local BASHRC_PATTERN_FROM='# enable bash completion in interactive shells\r#if ! shopt -oq posix; then\r#  if \[ -f \/usr\/share\/bash-completion\/bash_completion \]; then\r#    \. \/usr\/share\/bash-completion\/bash_completion\r#  elif \[ -f \/etc\/bash_completion \]; then\r#    \. \/etc\/bash_completion\r#  fi\r#fi\r'
+	local BASHRC_PATTERN_TO='# enable bash completion in interactive shells\rif ! shopt -oq posix; then\r  if \[ -f \/usr\/share\/bash-completion\/bash_completion \]; then\r    \. \/usr\/share\/bash-completion\/bash_completion\r  elif \[ -f \/etc\/bash_completion \]; then\r    \. \/etc\/bash_completion\r  fi\rfi\r'
+	
+	cat $FILE | tr '\n' '\r' | sed -e "s/$BASHRC_PATTERN_FROM/$BASHRC_PATTERN_TO/" | tr '\r' '\n'
+	return $?
+}
+
+configure_bash_completion()
+{
+	local BASHRC_FILE=/etc/bash.bashrc
+
+	echo "Enable bash completion in interactive shells."
+	
+	uncomment_bash_completion_in_interactive_shells $BASHRC_FILE >$BASHRC_FILE
+	return $?
+}
+
 check_login()
 {
-	echo "Check login for user '$USER'"
+	echo "Check login for user '$USER'."
 	
 	su -c 'echo Login successful as $(whoami). && exit' $USER
 	if [ $? -ne 0 ] ; then
@@ -806,6 +833,8 @@ main ()
 	&& configure_login_permissions \
 	&& install_sudo \
 	&& configure_sudo_permissions \
+	&& install_bash_completion \
+	&& configure_bash_completion \
 	&& check_login
 
 	if [ $? -ne 0 ] ; then

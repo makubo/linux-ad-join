@@ -791,10 +791,17 @@ uncomment_bash_completion_in_interactive_shells()
 configure_bash_completion()
 {
 	local BASHRC_FILE=/etc/bash.bashrc
+	local BASHRC_BACKUP=$BACKUP_PATH/bash.bashrc
 
 	echo "Enable bash completion in interactive shells."
 	
-	uncomment_bash_completion_in_interactive_shells $BASHRC_FILE >$BASHRC_FILE
+	cp $BASHRC_FILE $BASHRC_BACKUP
+	if [ $? -ne 0 ] ; then
+		echo "Can not copy file '$BASHRC_FILE' to '$BASHRC_BACKUP'."
+		return 1
+	fi
+	
+	uncomment_bash_completion_in_interactive_shells $BASHRC_BACKUP >$BASHRC_FILE
 	return $?
 }
 

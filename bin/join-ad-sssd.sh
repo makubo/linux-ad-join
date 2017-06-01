@@ -435,7 +435,8 @@ search_domain_controller()
 
 write_sssd_config()
 {
-	local SSSD_KRB5_AUTH_TIMEOUT=15
+	local SSSD_KRB5_AUTH_TIMEOUT=30
+    local SSSD_LDAP_OPT_TIMEOUT=15
 
 	local DOMAIN_LOWER=$(echo $DOMAIN | tr '[:upper:]' '[:lower:]')
 	local DOMAIN_UPPER=$(echo $DOMAIN | tr '[:lower:]' '[:upper:]')
@@ -488,8 +489,10 @@ write_sssd_config()
 	echo id_provider = ad
 	echo krb5_store_password_if_offline = True
 	echo krb5_auth_timeout = $SSSD_KRB5_AUTH_TIMEOUT
+    echo ldap_opt_timeout = $SSSD_LDAP_OPT_TIMEOUT
 	echo default_shell = /bin/bash
 	echo ldap_id_mapping = True
+    echo ignore_group_members = True
 	
 	printf "use_fully_qualified_names = "
 	if [ ! -z "$SSSD_USE_FQDN" ] && [ $SSSD_USE_FQDN -eq 0 ] ; then
